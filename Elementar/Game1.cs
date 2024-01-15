@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
@@ -50,6 +50,7 @@ namespace EarthDefender
 
             if (Singleton.I.score > Singleton.I.highscore)
             {
+                //keep highscore
                 Singleton.I.highscore = Singleton.I.score;
                 Singleton.I.score = 0;
             }
@@ -59,20 +60,26 @@ namespace EarthDefender
             }
 
             Singleton.I.player = new Player(Singleton.I.ballTexture, new(Singleton.GAMEWIDTH / 2f, Singleton.GAMEHEIGHT / 2f));
-            Singleton.I.player.position = new(100, 500);
+            Singleton.I.player.position = new(Singleton.GAMEWIDTH / 2, Singleton.GAMEHEIGHT - 128);
+            //Singleton.I.player.position = new(100,500);
             Singleton.I.balls = new();
             Singleton.I.particles = new();
-            Singleton.I.wallSpeed = 0.5f;
+            Singleton.I.wallSpeed = 1f;
             Singleton.I.groundY = 615f;
             Singleton.I.CurrentGameState = Singleton.GameState.GamePlaying;
             Singleton.I.ballGrid = new BallGrid(40, 10);
 
-            for (int y = 4; y < Singleton.I.ballGrid.height; y++)
+            for (int y = 1; y < Singleton.I.ballGrid.height - 4 ; y++)
             {
                 for (int x = 8; x < 15; x++)
                 {
                     Ball ball = new Ball(Singleton.I.ballTexture, Vector2.Zero);
-                    ball.position = Singleton.I.ballGrid.GridToWorldPosition(x, y);
+
+                    Vector2 gridToWorldPosition = Singleton.I.ballGrid.GridToWorldPosition(x, y);
+
+                    Console.WriteLine($"Grid Position ({x}, {y}) to World Position: {gridToWorldPosition}");
+
+                    ball.position = gridToWorldPosition;
                     ball.type = Singleton.I.random.Next(5);
                     ball.NoGravity = true;
                     Singleton.I.ballGrid.SetBall(x, y, ball);
@@ -218,12 +225,18 @@ namespace EarthDefender
                         }
                     }
 
+                    // dying is here
                     if (!Singleton.I.player.IsDying())
                     {
                         Singleton.I.ballGrid.ForEachBall(ball =>
                         {
-                            if (!ball.IsDying() && (ball.position.X - 32) <= (Singleton.I.player.position.X + 60))
+                            if (ball.IsDying() && (ball.position.X - 32) <= (Singleton.I.player.position.X + 60))
                             {
+                                Console.WriteLine("XXXXXXXXXX");
+                                Console.WriteLine($"Status: {!ball.IsDying()}");
+                                Console.WriteLine($"ball.position.X - 32: {ball.position.X - 32}");
+                                Console.WriteLine($"Singleton.I.player.position.X + 60: {Singleton.I.player.position.X + 60}");
+                                Console.WriteLine("XXXXXXXXXX");
                                 Singleton.I.player.Kill();
                             }
                         });
@@ -237,7 +250,10 @@ namespace EarthDefender
                     Singleton.I.balls.RemoveAll(ball => ball.IsDead());
                     Singleton.I.ballGrid.RemoveBallIf(ball => ball.IsDead());
 
-                    Singleton.I.ballGrid.Move(-Singleton.I.wallSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds, 0f);
+                    //waterfall ball direction
+                    //Singleton.I.ballGrid.Move(-Singleton.I.wallSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds, 0f);
+                    Singleton.I.ballGrid.Move(0f, Singleton.I.wallSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds);
+
                     Singleton.I.wallSpeed += 0.025f * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                     if (Singleton.I.balls.Count == 0)
@@ -311,9 +327,17 @@ namespace EarthDefender
             _spriteBatch.Draw(Singleton.I.background, new Vector2(0, 0), Color.White);
 
             // death line
-            Rectangle deathLineRectangle = new Rectangle(285, 63, 4, 258);
-            _spriteBatch.Draw(Singleton.I.ballTexture, new Rectangle((int)Singleton.I.player.position.X + 32, 0, 5, (int)Singleton.I.groundY), deathLineRectangle, Color.White);
+            Rectangle deathLineRectangle = new Rectangle(285, 63, 4, 258); //ตัดไทล์ ที่ตำแหน่ง 285, 63 ใน sprite.png ด้วยขนาด 4 * 258
+            _spriteBatch.Draw(Singleton.I.ballTexture, new Rectangle(1000, 450, 5, (int)Singleton.I.groundY), deathLineRectangle, Color.White, MathHelper.PiOver2, Vector2.Zero, SpriteEffects.None, 0f);
+            //_spriteBatch.Draw(Singleton.I.ballTexture, new Rectangle((int)Singleton.I.player.position.X + 32, 0, 5, (int)Singleton.I.groundY), deathLineRectangle, Color.White);
+            //_spriteBatch.Draw(_line, new Vector2(200, 0), null, Color.White, MathHelper.Pi / 2, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
+            // block two line
+            _spriteBatch.Draw(Singleton.I.ballTexture, new Rectangle(390, 0, 5, (int)Singleton.I.groundY), deathLineRectangle, Color.White);
+            _spriteBatch.Draw(Singleton.I.ballTexture, new Rectangle(990, 0, 5, (int)Singleton.I.groundY), deathLineRectangle, Color.White);
+
+
+            
             foreach (var ball in Singleton.I.balls)
             {
                 ball.Draw(_spriteBatch);

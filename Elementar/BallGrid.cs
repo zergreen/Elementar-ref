@@ -5,6 +5,7 @@ using System.Diagnostics;
 
 namespace EarthDefender
 {
+    // like gameboard (it's database)
     class BallGrid
     {
         public readonly int width, height;
@@ -128,9 +129,23 @@ namespace EarthDefender
             float halfGridWidth = gridWidth / 2f;
             var worldPos = new Vector2(
                 x * gridWidth + xOffset,
-                y * gridHeight + yOffset
-                );
+                  y * gridHeight + yOffset
+
+                 
+
+                //y * gridHeight * 0.5f + yOffset  // Adjusted this line
+                //y * gridHeight * 0.5f + yOffset - (gridHeight * 0.5f) // Adjusted this line
+                ); ;
             if (y % 2 == 0) worldPos.X -= halfGridWidth;
+            Console.WriteLine($"********");
+            Console.WriteLine($"Grid Position ({x}, {y}) to World Position: {worldPos}");
+            Console.WriteLine($"{worldPos.X} = {x} * {gridWidth} + {xOffset}");
+            Console.WriteLine($"{worldPos.Y} = {y} * {gridHeight} + {yOffset}");
+            Console.WriteLine($"********");
+
+
+            //Console.WriteLine($"Grid Position ({x}, {y}) to World Position: {worldPos}");
+
             return worldPos;
         }
 
